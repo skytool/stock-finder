@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Stock Finder</title>
+  
+  <!-- PWA -->
+  <meta name="theme-color" content="#1a1a2e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Stocks">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="manifest" href="manifest.json">
+  
+  <link rel="stylesheet" href="style.css">
+  <!-- TradingView Widget -->
+  <script src="https://s3.tradingview.com/tv.js"></script>
+</head>
+<body>
+  <div class="app">
+    <!-- Header -->
+    <header class="header">
+      <h1>📈 Stock Finder</h1>
+      <p class="subtitle">AI-Powered Stock Discovery</p>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="nav">
+      <button class="nav-btn active" data-view="discover">🎯 Discover</button>
+      <button class="nav-btn" data-view="search">🔍 Search</button>
+      <button class="nav-btn" data-view="watchlist">⭐ Watchlist</button>
+    </nav>
+
+    <!-- Views -->
+    <main class="main">
+      <!-- Discover View (Q&A Wizard) -->
+      <section id="discover-view" class="view active">
+        <div class="wizard-card" id="wizard">
+          <div class="wizard-progress">
+            <div class="progress-bar" id="progress-bar"></div>
+          </div>
+          <div class="wizard-content" id="wizard-content">
+            <!-- Filled by JS -->
+          </div>
+        </div>
+        
+        <div class="results-section" id="results-section" style="display: none;">
+          <h2>🎯 Recommended Stocks</h2>
+          <div class="stock-list" id="results-list"></div>
+        </div>
+      </section>
+
+      <!-- Search View -->
+      <section id="search-view" class="view">
+        <div class="search-box">
+          <input type="text" id="search-input" placeholder="Search ticker or company...">
+          <button id="search-btn">🔍</button>
+        </div>
+        <div id="stock-detail" class="stock-detail"></div>
+      </section>
+
+      <!-- Watchlist View -->
+      <section id="watchlist-view" class="view">
+        <div class="watchlist-header">
+          <h2>⭐ My Watchlist</h2>
+          <span class="watchlist-count" id="watchlist-count">0</span>
+        </div>
+        <div class="stock-list" id="watchlist"></div>
+        <p class="empty-state" id="empty-watchlist">No stocks in watchlist yet</p>
+      </section>
+    </main>
+  </div>
+
+  <!-- Stock Detail Modal -->
+  <div class="modal" id="stock-modal">
+    <div class="modal-content">
+      <button class="modal-close" id="modal-close">✕</button>
+      <div class="modal-header" id="modal-header"></div>
+      <div class="modal-tabs">
+        <button class="modal-tab active" data-tab="chart">📊 Chart</button>
+        <button class="modal-tab" data-tab="news">📰 News</button>
+        <button class="modal-tab" data-tab="analysis">🤖 AI</button>
+      </div>
+      <div class="modal-body" id="modal-body"></div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

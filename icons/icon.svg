@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="100" fill="#0d0d1a"/>
+  <!-- Chart bars -->
+  <rect x="100" y="280" width="60" height="120" rx="8" fill="#00d4aa"/>
+  <rect x="180" y="200" width="60" height="200" rx="8" fill="#00d4aa"/>
+  <rect x="260" y="160" width="60" height="240" rx="8" fill="#00d4aa"/>
+  <rect x="340" y="120" width="60" height="280" rx="8" fill="#00d4aa"/>
+  <!-- Arrow -->
+  <path d="M120 180 L380 100" stroke="#FFD60A" stroke-width="12" stroke-linecap="round"/>
+  <path d="M350 80 L390 100 L370 140" stroke="#FFD60A" stroke-width="12" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
