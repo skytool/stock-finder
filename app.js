@@ -1,39 +1,56 @@
-// Wizard Questions for Stock Discovery
+// Wizard Questions for Stock Discovery (Enhanced with multi-select)
 const wizardQuestions = [
   {
-    id: 'goal',
-    question: "What's your investment goal?",
+    id: 'type',
+    question: "What type of investment are you looking for?",
+    multiSelect: true,
     options: [
-      { value: 'growth', label: '📈 Growth - High potential returns', tags: ['growth', 'tech'] },
-      { value: 'income', label: '💰 Income - Dividend stocks', tags: ['dividend', 'stable'] },
-      { value: 'value', label: '💎 Value - Undervalued gems', tags: ['value', 'bargain'] },
-      { value: 'safety', label: '🛡️ Safety - Low risk', tags: ['stable', 'bluechip'] }
+      { value: 'stock', label: '📊 Individual Stocks', tags: ['stock'] },
+      { value: 'etf', label: '📦 ETFs (Diversified)', tags: ['etf'] },
+      { value: 'dividend', label: '💰 Dividend Payers', tags: ['dividend'] },
+      { value: 'growth', label: '🚀 Growth Stocks', tags: ['growth'] }
+    ]
+  },
+  {
+    id: 'goal',
+    question: "What are your investment goals?",
+    multiSelect: true,
+    options: [
+      { value: 'capital', label: '📈 Capital Appreciation', tags: ['growth', 'momentum'] },
+      { value: 'income', label: '💵 Passive Income', tags: ['dividend', 'income'] },
+      { value: 'safety', label: '🛡️ Capital Preservation', tags: ['stable', 'bluechip'] },
+      { value: 'diversify', label: '🌐 Diversification', tags: ['etf', 'balanced'] }
     ]
   },
   {
     id: 'horizon',
-    question: "What's your time horizon?",
+    question: "What's your investment time horizon?",
+    multiSelect: false,
     options: [
       { value: 'short', label: '⚡ Short term (< 1 year)', tags: ['momentum', 'swing'] },
       { value: 'medium', label: '📅 Medium term (1-3 years)', tags: ['growth'] },
-      { value: 'long', label: '🏔️ Long term (3+ years)', tags: ['compound', 'bluechip'] }
+      { value: 'long', label: '🏔️ Long term (3+ years)', tags: ['compound', 'bluechip', 'dividend'] }
     ]
   },
   {
     id: 'sector',
-    question: "Which sector interests you?",
+    question: "Which sectors interest you?",
+    multiSelect: true,
     options: [
-      { value: 'tech', label: '💻 Technology', tags: ['tech'], sectors: ['XLK'] },
-      { value: 'health', label: '🏥 Healthcare', tags: ['health'], sectors: ['XLV'] },
-      { value: 'finance', label: '🏦 Finance', tags: ['finance'], sectors: ['XLF'] },
-      { value: 'energy', label: '⚡ Energy', tags: ['energy'], sectors: ['XLE'] },
-      { value: 'consumer', label: '🛒 Consumer', tags: ['consumer'], sectors: ['XLY'] },
+      { value: 'tech', label: '💻 Technology', tags: ['tech'] },
+      { value: 'health', label: '🏥 Healthcare', tags: ['health'] },
+      { value: 'finance', label: '🏦 Finance', tags: ['finance'] },
+      { value: 'energy', label: '⚡ Energy', tags: ['energy'] },
+      { value: 'consumer', label: '🛒 Consumer', tags: ['consumer'] },
+      { value: 'industrial', label: '🏭 Industrial', tags: ['industrial'] },
+      { value: 'realestate', label: '🏠 Real Estate', tags: ['realestate', 'reit'] },
       { value: 'any', label: '🌐 All Sectors', tags: [] }
     ]
   },
   {
     id: 'size',
     question: "What company size do you prefer?",
+    multiSelect: true,
     options: [
       { value: 'large', label: '🏢 Large Cap ($10B+)', tags: ['bluechip', 'stable'] },
       { value: 'mid', label: '🏠 Mid Cap ($2B-$10B)', tags: ['growth'] },
@@ -42,71 +59,161 @@ const wizardQuestions = [
     ]
   },
   {
+    id: 'dividend',
+    question: "What's your dividend preference?",
+    multiSelect: false,
+    options: [
+      { value: 'high', label: '💰 High Yield (4%+)', tags: ['high-yield', 'income'] },
+      { value: 'growth', label: '📈 Dividend Growth', tags: ['dividend-growth'] },
+      { value: 'aristocrat', label: '👑 Dividend Aristocrats (25+ years)', tags: ['aristocrat', 'stable'] },
+      { value: 'none', label: '🚫 No Preference', tags: [] }
+    ]
+  },
+  {
     id: 'risk',
     question: "What's your risk tolerance?",
+    multiSelect: false,
     options: [
-      { value: 'low', label: '🐢 Conservative - Steady gains', tags: ['stable', 'dividend'] },
+      { value: 'low', label: '🐢 Conservative - Steady gains', tags: ['stable', 'dividend', 'bluechip'] },
       { value: 'medium', label: '🦊 Moderate - Balanced', tags: ['balanced'] },
-      { value: 'high', label: '🚀 Aggressive - High risk/reward', tags: ['growth', 'momentum'] }
+      { value: 'high', label: '🚀 Aggressive - High risk/reward', tags: ['growth', 'momentum', 'aggressive'] }
+    ]
+  },
+  {
+    id: 'etfType',
+    question: "For ETFs, what type interests you?",
+    multiSelect: true,
+    showIf: (answers) => answers.type?.includes('etf'),
+    options: [
+      { value: 'index', label: '📊 Index Funds (S&P 500, Nasdaq)', tags: ['index'] },
+      { value: 'sector', label: '🎯 Sector ETFs', tags: ['sector-etf'] },
+      { value: 'dividend-etf', label: '💰 Dividend ETFs', tags: ['dividend-etf'] },
+      { value: 'bond', label: '📜 Bond ETFs', tags: ['bond', 'fixed-income'] },
+      { value: 'international', label: '🌍 International ETFs', tags: ['international'] },
+      { value: 'thematic', label: '🎨 Thematic (AI, Clean Energy)', tags: ['thematic'] }
     ]
   }
 ];
 
-// Stock database (curated list with metadata)
+// Enhanced Stock & ETF Database
 const stockDatabase = [
-  // Tech Giants
-  { ticker: 'AAPL', name: 'Apple Inc.', sector: 'tech', cap: 'large', tags: ['bluechip', 'growth', 'tech', 'stable'] },
-  { ticker: 'MSFT', name: 'Microsoft Corp.', sector: 'tech', cap: 'large', tags: ['bluechip', 'growth', 'tech', 'stable', 'dividend'] },
-  { ticker: 'GOOGL', name: 'Alphabet Inc.', sector: 'tech', cap: 'large', tags: ['bluechip', 'growth', 'tech'] },
-  { ticker: 'AMZN', name: 'Amazon.com Inc.', sector: 'tech', cap: 'large', tags: ['growth', 'tech', 'consumer'] },
-  { ticker: 'NVDA', name: 'NVIDIA Corp.', sector: 'tech', cap: 'large', tags: ['growth', 'tech', 'momentum', 'aggressive'] },
-  { ticker: 'META', name: 'Meta Platforms', sector: 'tech', cap: 'large', tags: ['growth', 'tech', 'value'] },
-  { ticker: 'TSLA', name: 'Tesla Inc.', sector: 'tech', cap: 'large', tags: ['growth', 'momentum', 'aggressive'] },
+  // ===== ETFs =====
+  // Index ETFs
+  { ticker: 'SPY', name: 'SPDR S&P 500 ETF', sector: 'index', cap: 'large', type: 'etf', tags: ['etf', 'index', 'bluechip', 'stable', 'sp500'] },
+  { ticker: 'VOO', name: 'Vanguard S&P 500 ETF', sector: 'index', cap: 'large', type: 'etf', tags: ['etf', 'index', 'bluechip', 'stable', 'sp500'] },
+  { ticker: 'QQQ', name: 'Invesco Nasdaq 100 ETF', sector: 'tech', cap: 'large', type: 'etf', tags: ['etf', 'index', 'tech', 'growth', 'nasdaq'] },
+  { ticker: 'VTI', name: 'Vanguard Total Stock Market', sector: 'index', cap: 'large', type: 'etf', tags: ['etf', 'index', 'balanced', 'stable'] },
+  { ticker: 'IWM', name: 'iShares Russell 2000 ETF', sector: 'index', cap: 'small', type: 'etf', tags: ['etf', 'index', 'small-cap', 'growth'] },
+  { ticker: 'DIA', name: 'SPDR Dow Jones ETF', sector: 'index', cap: 'large', type: 'etf', tags: ['etf', 'index', 'bluechip', 'stable'] },
   
-  // Tech Growth
-  { ticker: 'AMD', name: 'Advanced Micro Devices', sector: 'tech', cap: 'large', tags: ['growth', 'tech', 'momentum'] },
-  { ticker: 'CRM', name: 'Salesforce Inc.', sector: 'tech', cap: 'large', tags: ['growth', 'tech'] },
-  { ticker: 'ADBE', name: 'Adobe Inc.', sector: 'tech', cap: 'large', tags: ['growth', 'tech', 'stable'] },
-  { ticker: 'NOW', name: 'ServiceNow Inc.', sector: 'tech', cap: 'large', tags: ['growth', 'tech'] },
-  { ticker: 'SNOW', name: 'Snowflake Inc.', sector: 'tech', cap: 'mid', tags: ['growth', 'tech', 'aggressive'] },
+  // Sector ETFs
+  { ticker: 'XLK', name: 'Technology Select Sector', sector: 'tech', cap: 'large', type: 'etf', tags: ['etf', 'sector-etf', 'tech'] },
+  { ticker: 'XLF', name: 'Financial Select Sector', sector: 'finance', cap: 'large', type: 'etf', tags: ['etf', 'sector-etf', 'finance'] },
+  { ticker: 'XLV', name: 'Health Care Select Sector', sector: 'health', cap: 'large', type: 'etf', tags: ['etf', 'sector-etf', 'health'] },
+  { ticker: 'XLE', name: 'Energy Select Sector', sector: 'energy', cap: 'large', type: 'etf', tags: ['etf', 'sector-etf', 'energy'] },
+  { ticker: 'XLY', name: 'Consumer Discretionary Sector', sector: 'consumer', cap: 'large', type: 'etf', tags: ['etf', 'sector-etf', 'consumer'] },
+  { ticker: 'XLI', name: 'Industrial Select Sector', sector: 'industrial', cap: 'large', type: 'etf', tags: ['etf', 'sector-etf', 'industrial'] },
+  { ticker: 'XLRE', name: 'Real Estate Select Sector', sector: 'realestate', cap: 'large', type: 'etf', tags: ['etf', 'sector-etf', 'realestate', 'reit'] },
   
-  // Finance
-  { ticker: 'JPM', name: 'JPMorgan Chase', sector: 'finance', cap: 'large', tags: ['bluechip', 'finance', 'dividend', 'stable'] },
-  { ticker: 'BAC', name: 'Bank of America', sector: 'finance', cap: 'large', tags: ['finance', 'dividend', 'value'] },
-  { ticker: 'V', name: 'Visa Inc.', sector: 'finance', cap: 'large', tags: ['bluechip', 'growth', 'finance', 'stable'] },
-  { ticker: 'MA', name: 'Mastercard Inc.', sector: 'finance', cap: 'large', tags: ['growth', 'finance', 'stable'] },
-  { ticker: 'GS', name: 'Goldman Sachs', sector: 'finance', cap: 'large', tags: ['finance', 'dividend'] },
+  // Dividend ETFs
+  { ticker: 'VYM', name: 'Vanguard High Dividend Yield', sector: 'dividend', cap: 'large', type: 'etf', tags: ['etf', 'dividend-etf', 'dividend', 'income', 'high-yield'] },
+  { ticker: 'SCHD', name: 'Schwab US Dividend Equity', sector: 'dividend', cap: 'large', type: 'etf', tags: ['etf', 'dividend-etf', 'dividend', 'dividend-growth', 'income'] },
+  { ticker: 'DVY', name: 'iShares Select Dividend', sector: 'dividend', cap: 'large', type: 'etf', tags: ['etf', 'dividend-etf', 'dividend', 'income'] },
+  { ticker: 'VIG', name: 'Vanguard Dividend Appreciation', sector: 'dividend', cap: 'large', type: 'etf', tags: ['etf', 'dividend-etf', 'dividend-growth', 'stable'] },
+  { ticker: 'NOBL', name: 'ProShares S&P 500 Aristocrats', sector: 'dividend', cap: 'large', type: 'etf', tags: ['etf', 'dividend-etf', 'aristocrat', 'dividend', 'stable'] },
+  { ticker: 'HDV', name: 'iShares Core High Dividend', sector: 'dividend', cap: 'large', type: 'etf', tags: ['etf', 'dividend-etf', 'high-yield', 'income'] },
   
-  // Healthcare
-  { ticker: 'JNJ', name: 'Johnson & Johnson', sector: 'health', cap: 'large', tags: ['bluechip', 'health', 'dividend', 'stable'] },
-  { ticker: 'UNH', name: 'UnitedHealth Group', sector: 'health', cap: 'large', tags: ['bluechip', 'health', 'growth'] },
-  { ticker: 'PFE', name: 'Pfizer Inc.', sector: 'health', cap: 'large', tags: ['health', 'dividend', 'value'] },
-  { ticker: 'LLY', name: 'Eli Lilly', sector: 'health', cap: 'large', tags: ['health', 'growth', 'momentum'] },
-  { ticker: 'ABBV', name: 'AbbVie Inc.', sector: 'health', cap: 'large', tags: ['health', 'dividend'] },
+  // Bond ETFs
+  { ticker: 'BND', name: 'Vanguard Total Bond Market', sector: 'bond', cap: 'large', type: 'etf', tags: ['etf', 'bond', 'fixed-income', 'stable'] },
+  { ticker: 'AGG', name: 'iShares Core US Aggregate Bond', sector: 'bond', cap: 'large', type: 'etf', tags: ['etf', 'bond', 'fixed-income', 'stable'] },
+  { ticker: 'TLT', name: 'iShares 20+ Year Treasury', sector: 'bond', cap: 'large', type: 'etf', tags: ['etf', 'bond', 'treasury', 'fixed-income'] },
+  { ticker: 'HYG', name: 'iShares High Yield Corporate', sector: 'bond', cap: 'large', type: 'etf', tags: ['etf', 'bond', 'high-yield', 'income'] },
   
-  // Energy
-  { ticker: 'XOM', name: 'Exxon Mobil', sector: 'energy', cap: 'large', tags: ['energy', 'dividend', 'value'] },
-  { ticker: 'CVX', name: 'Chevron Corp.', sector: 'energy', cap: 'large', tags: ['energy', 'dividend', 'stable'] },
-  { ticker: 'NEE', name: 'NextEra Energy', sector: 'energy', cap: 'large', tags: ['energy', 'growth', 'stable'] },
+  // International ETFs
+  { ticker: 'VEU', name: 'Vanguard All-World ex-US', sector: 'international', cap: 'large', type: 'etf', tags: ['etf', 'international', 'balanced'] },
+  { ticker: 'EFA', name: 'iShares MSCI EAFE', sector: 'international', cap: 'large', type: 'etf', tags: ['etf', 'international', 'developed'] },
+  { ticker: 'VWO', name: 'Vanguard Emerging Markets', sector: 'international', cap: 'large', type: 'etf', tags: ['etf', 'international', 'emerging', 'growth'] },
+  { ticker: 'EEM', name: 'iShares MSCI Emerging Markets', sector: 'international', cap: 'large', type: 'etf', tags: ['etf', 'international', 'emerging'] },
   
-  // Consumer
-  { ticker: 'WMT', name: 'Walmart Inc.', sector: 'consumer', cap: 'large', tags: ['consumer', 'dividend', 'stable', 'bluechip'] },
-  { ticker: 'COST', name: 'Costco Wholesale', sector: 'consumer', cap: 'large', tags: ['consumer', 'growth', 'stable'] },
-  { ticker: 'HD', name: 'Home Depot', sector: 'consumer', cap: 'large', tags: ['consumer', 'dividend', 'stable'] },
-  { ticker: 'NKE', name: 'Nike Inc.', sector: 'consumer', cap: 'large', tags: ['consumer', 'growth', 'value'] },
-  { ticker: 'SBUX', name: 'Starbucks Corp.', sector: 'consumer', cap: 'large', tags: ['consumer', 'dividend'] },
-  { ticker: 'MCD', name: 'McDonald\'s Corp.', sector: 'consumer', cap: 'large', tags: ['consumer', 'dividend', 'stable', 'bluechip'] },
+  // Thematic ETFs
+  { ticker: 'ARKK', name: 'ARK Innovation ETF', sector: 'tech', cap: 'mid', type: 'etf', tags: ['etf', 'thematic', 'growth', 'tech', 'aggressive'] },
+  { ticker: 'BOTZ', name: 'Global X Robotics & AI', sector: 'tech', cap: 'mid', type: 'etf', tags: ['etf', 'thematic', 'tech', 'ai', 'growth'] },
+  { ticker: 'ICLN', name: 'iShares Global Clean Energy', sector: 'energy', cap: 'mid', type: 'etf', tags: ['etf', 'thematic', 'energy', 'clean-energy', 'growth'] },
+  { ticker: 'TAN', name: 'Invesco Solar ETF', sector: 'energy', cap: 'mid', type: 'etf', tags: ['etf', 'thematic', 'energy', 'solar', 'aggressive'] },
   
-  // Dividend Kings
-  { ticker: 'KO', name: 'Coca-Cola Co.', sector: 'consumer', cap: 'large', tags: ['dividend', 'stable', 'bluechip'] },
-  { ticker: 'PG', name: 'Procter & Gamble', sector: 'consumer', cap: 'large', tags: ['dividend', 'stable', 'bluechip'] },
-  { ticker: 'PEP', name: 'PepsiCo Inc.', sector: 'consumer', cap: 'large', tags: ['dividend', 'stable'] },
+  // REIT ETFs
+  { ticker: 'VNQ', name: 'Vanguard Real Estate ETF', sector: 'realestate', cap: 'large', type: 'etf', tags: ['etf', 'reit', 'realestate', 'dividend', 'income'] },
+  { ticker: 'IYR', name: 'iShares US Real Estate', sector: 'realestate', cap: 'large', type: 'etf', tags: ['etf', 'reit', 'realestate', 'dividend'] },
   
-  // Growth Mid-caps
-  { ticker: 'CRWD', name: 'CrowdStrike Holdings', sector: 'tech', cap: 'mid', tags: ['growth', 'tech', 'momentum'] },
-  { ticker: 'DDOG', name: 'Datadog Inc.', sector: 'tech', cap: 'mid', tags: ['growth', 'tech'] },
-  { ticker: 'NET', name: 'Cloudflare Inc.', sector: 'tech', cap: 'mid', tags: ['growth', 'tech', 'aggressive'] },
-  { ticker: 'PANW', name: 'Palo Alto Networks', sector: 'tech', cap: 'mid', tags: ['growth', 'tech'] },
+  // ===== DIVIDEND STOCKS =====
+  // Dividend Aristocrats (25+ years of dividend increases)
+  { ticker: 'JNJ', name: 'Johnson & Johnson', sector: 'health', cap: 'large', type: 'stock', tags: ['stock', 'dividend', 'aristocrat', 'bluechip', 'stable', 'health'] },
+  { ticker: 'PG', name: 'Procter & Gamble', sector: 'consumer', cap: 'large', type: 'stock', tags: ['stock', 'dividend', 'aristocrat', 'bluechip', 'stable', 'consumer'] },
+  { ticker: 'KO', name: 'Coca-Cola Co.', sector: 'consumer', cap: 'large', type: 'stock', tags: ['stock', 'dividend', 'aristocrat', 'bluechip', 'stable', 'income'] },
+  { ticker: 'PEP', name: 'PepsiCo Inc.', sector: 'consumer', cap: 'large', type: 'stock', tags: ['stock', 'dividend', 'aristocrat', 'stable', 'consumer'] },
+  { ticker: 'MMM', name: '3M Company', sector: 'industrial', cap: 'large', type: 'stock', tags: ['stock', 'dividend', 'aristocrat', 'industrial', 'value'] },
+  { ticker: 'ABT', name: 'Abbott Laboratories', sector: 'health', cap: 'large', type: 'stock', tags: ['stock', 'dividend', 'aristocrat', 'health', 'dividend-growth'] },
+  { ticker: 'CL', name: 'Colgate-Palmolive', sector: 'consumer', cap: 'large', type: 'stock', tags: ['stock', 'dividend', 'aristocrat', 'stable', 'consumer'] },
+  { ticker: 'MCD', name: 'McDonald\'s Corp.', sector: 'consumer', cap: 'large', type: 'stock', tags: ['stock', 'dividend', 'aristocrat', 'bluechip', 'stable'] },
+  { ticker: 'WMT', name: 'Walmart Inc.', sector: 'consumer', cap: 'large', type: 'stock', tags: ['stock', 'dividend', 'aristocrat', 'bluechip', 'stable'] },
+  { ticker: 'TGT', name: 'Target Corp.', sector: 'consumer', cap: 'large', type: 'stock', tags: ['stock', 'dividend', 'aristocrat', 'consumer', 'income'] },
+  { ticker: 'SWK', name: 'Stanley Black & Decker', sector: 'industrial', cap: 'large', type: 'stock', tags: ['stock', 'dividend', 'aristocrat', 'industrial'] },
+  { ticker: 'EMR', name: 'Emerson Electric', sector: 'industrial', cap: 'large', type: 'stock', tags: ['stock', 'dividend', 'aristocrat', 'industrial', 'stable'] },
+  
+  // High Yield Dividend Stocks
+  { ticker: 'T', name: 'AT&T Inc.', sector: 'telecom', cap: 'large', type: 'stock', tags: ['stock', 'dividend', 'high-yield', 'income', 'value'] },
+  { ticker: 'VZ', name: 'Verizon Communications', sector: 'telecom', cap: 'large', type: 'stock', tags: ['stock', 'dividend', 'high-yield', 'income', 'stable'] },
+  { ticker: 'MO', name: 'Altria Group', sector: 'consumer', cap: 'large', type: 'stock', tags: ['stock', 'dividend', 'high-yield', 'income'] },
+  { ticker: 'PM', name: 'Philip Morris Intl.', sector: 'consumer', cap: 'large', type: 'stock', tags: ['stock', 'dividend', 'high-yield', 'income', 'international'] },
+  { ticker: 'IBM', name: 'IBM Corp.', sector: 'tech', cap: 'large', type: 'stock', tags: ['stock', 'dividend', 'high-yield', 'tech', 'value'] },
+  
+  // REITs (High Dividend)
+  { ticker: 'O', name: 'Realty Income Corp.', sector: 'realestate', cap: 'large', type: 'stock', tags: ['stock', 'reit', 'dividend', 'income', 'monthly-dividend', 'stable'] },
+  { ticker: 'STAG', name: 'STAG Industrial', sector: 'realestate', cap: 'mid', type: 'stock', tags: ['stock', 'reit', 'dividend', 'income', 'monthly-dividend', 'industrial'] },
+  { ticker: 'NNN', name: 'NNN REIT Inc.', sector: 'realestate', cap: 'mid', type: 'stock', tags: ['stock', 'reit', 'dividend', 'income', 'aristocrat'] },
+  { ticker: 'SPG', name: 'Simon Property Group', sector: 'realestate', cap: 'large', type: 'stock', tags: ['stock', 'reit', 'dividend', 'high-yield', 'income'] },
+  
+  // Dividend Growth Stocks
+  { ticker: 'MSFT', name: 'Microsoft Corp.', sector: 'tech', cap: 'large', type: 'stock', tags: ['stock', 'dividend', 'dividend-growth', 'bluechip', 'tech', 'growth', 'stable'] },
+  { ticker: 'AAPL', name: 'Apple Inc.', sector: 'tech', cap: 'large', type: 'stock', tags: ['stock', 'dividend', 'dividend-growth', 'bluechip', 'tech', 'growth'] },
+  { ticker: 'V', name: 'Visa Inc.', sector: 'finance', cap: 'large', type: 'stock', tags: ['stock', 'dividend', 'dividend-growth', 'bluechip', 'finance', 'growth'] },
+  { ticker: 'MA', name: 'Mastercard Inc.', sector: 'finance', cap: 'large', type: 'stock', tags: ['stock', 'dividend', 'dividend-growth', 'finance', 'growth'] },
+  { ticker: 'HD', name: 'Home Depot', sector: 'consumer', cap: 'large', type: 'stock', tags: ['stock', 'dividend', 'dividend-growth', 'consumer', 'stable'] },
+  { ticker: 'UNH', name: 'UnitedHealth Group', sector: 'health', cap: 'large', type: 'stock', tags: ['stock', 'dividend', 'dividend-growth', 'health', 'growth'] },
+  { ticker: 'COST', name: 'Costco Wholesale', sector: 'consumer', cap: 'large', type: 'stock', tags: ['stock', 'dividend', 'dividend-growth', 'consumer', 'growth'] },
+  
+  // ===== GROWTH STOCKS =====
+  { ticker: 'NVDA', name: 'NVIDIA Corp.', sector: 'tech', cap: 'large', type: 'stock', tags: ['stock', 'growth', 'tech', 'momentum', 'aggressive', 'ai'] },
+  { ticker: 'GOOGL', name: 'Alphabet Inc.', sector: 'tech', cap: 'large', type: 'stock', tags: ['stock', 'growth', 'bluechip', 'tech'] },
+  { ticker: 'AMZN', name: 'Amazon.com Inc.', sector: 'tech', cap: 'large', type: 'stock', tags: ['stock', 'growth', 'tech', 'consumer'] },
+  { ticker: 'META', name: 'Meta Platforms', sector: 'tech', cap: 'large', type: 'stock', tags: ['stock', 'growth', 'tech', 'value'] },
+  { ticker: 'TSLA', name: 'Tesla Inc.', sector: 'tech', cap: 'large', type: 'stock', tags: ['stock', 'growth', 'momentum', 'aggressive'] },
+  { ticker: 'AMD', name: 'Advanced Micro Devices', sector: 'tech', cap: 'large', type: 'stock', tags: ['stock', 'growth', 'tech', 'momentum'] },
+  { ticker: 'CRM', name: 'Salesforce Inc.', sector: 'tech', cap: 'large', type: 'stock', tags: ['stock', 'growth', 'tech'] },
+  { ticker: 'ADBE', name: 'Adobe Inc.', sector: 'tech', cap: 'large', type: 'stock', tags: ['stock', 'growth', 'tech', 'stable'] },
+  { ticker: 'NOW', name: 'ServiceNow Inc.', sector: 'tech', cap: 'large', type: 'stock', tags: ['stock', 'growth', 'tech'] },
+  { ticker: 'SNOW', name: 'Snowflake Inc.', sector: 'tech', cap: 'mid', type: 'stock', tags: ['stock', 'growth', 'tech', 'aggressive'] },
+  { ticker: 'CRWD', name: 'CrowdStrike Holdings', sector: 'tech', cap: 'mid', type: 'stock', tags: ['stock', 'growth', 'tech', 'momentum'] },
+  { ticker: 'DDOG', name: 'Datadog Inc.', sector: 'tech', cap: 'mid', type: 'stock', tags: ['stock', 'growth', 'tech'] },
+  { ticker: 'NET', name: 'Cloudflare Inc.', sector: 'tech', cap: 'mid', type: 'stock', tags: ['stock', 'growth', 'tech', 'aggressive'] },
+  { ticker: 'LLY', name: 'Eli Lilly', sector: 'health', cap: 'large', type: 'stock', tags: ['stock', 'growth', 'health', 'momentum'] },
+  
+  // ===== FINANCE =====
+  { ticker: 'JPM', name: 'JPMorgan Chase', sector: 'finance', cap: 'large', type: 'stock', tags: ['stock', 'dividend', 'bluechip', 'finance', 'stable'] },
+  { ticker: 'BAC', name: 'Bank of America', sector: 'finance', cap: 'large', type: 'stock', tags: ['stock', 'dividend', 'finance', 'value'] },
+  { ticker: 'GS', name: 'Goldman Sachs', sector: 'finance', cap: 'large', type: 'stock', tags: ['stock', 'dividend', 'finance'] },
+  { ticker: 'BRK.B', name: 'Berkshire Hathaway B', sector: 'finance', cap: 'large', type: 'stock', tags: ['stock', 'bluechip', 'finance', 'value', 'stable'] },
+  
+  // ===== ENERGY =====
+  { ticker: 'XOM', name: 'Exxon Mobil', sector: 'energy', cap: 'large', type: 'stock', tags: ['stock', 'dividend', 'energy', 'high-yield', 'value'] },
+  { ticker: 'CVX', name: 'Chevron Corp.', sector: 'energy', cap: 'large', type: 'stock', tags: ['stock', 'dividend', 'energy', 'aristocrat', 'stable'] },
+  { ticker: 'NEE', name: 'NextEra Energy', sector: 'energy', cap: 'large', type: 'stock', tags: ['stock', 'dividend', 'energy', 'growth', 'clean-energy'] },
+  
+  // ===== INDUSTRIALS =====
+  { ticker: 'CAT', name: 'Caterpillar Inc.', sector: 'industrial', cap: 'large', type: 'stock', tags: ['stock', 'dividend', 'industrial', 'dividend-growth'] },
+  { ticker: 'HON', name: 'Honeywell Intl.', sector: 'industrial', cap: 'large', type: 'stock', tags: ['stock', 'dividend', 'industrial', 'stable'] },
+  { ticker: 'UPS', name: 'United Parcel Service', sector: 'industrial', cap: 'large', type: 'stock', tags: ['stock', 'dividend', 'industrial', 'income'] },
+  { ticker: 'LMT', name: 'Lockheed Martin', sector: 'industrial', cap: 'large', type: 'stock', tags: ['stock', 'dividend', 'industrial', 'stable', 'dividend-growth'] },
 ];
 
 // State
@@ -134,6 +241,14 @@ const modalHeader = document.getElementById('modal-header');
 const modalBody = document.getElementById('modal-body');
 const modalTabs = document.querySelectorAll('.modal-tab');
 
+// Get applicable questions based on answers
+function getApplicableQuestions() {
+  return wizardQuestions.filter(q => {
+    if (!q.showIf) return true;
+    return q.showIf(answers);
+  });
+}
+
 // Navigation
 navBtns.forEach(btn => {
   btn.addEventListener('click', () => {
@@ -151,24 +266,39 @@ navBtns.forEach(btn => {
 
 // Wizard
 function renderWizard() {
-  const question = wizardQuestions[currentStep];
-  const progress = ((currentStep) / wizardQuestions.length) * 100;
+  const applicableQuestions = getApplicableQuestions();
+  const question = applicableQuestions[currentStep];
+  
+  if (!question) {
+    findStocks();
+    return;
+  }
+  
+  const progress = ((currentStep) / applicableQuestions.length) * 100;
   progressBar.style.width = `${progress}%`;
+  
+  const currentAnswers = answers[question.id] || (question.multiSelect ? [] : null);
   
   wizardContent.innerHTML = `
     <h3 class="wizard-question">${question.question}</h3>
+    ${question.multiSelect ? '<p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 16px;">Select all that apply</p>' : ''}
     <div class="wizard-options">
-      ${question.options.map(opt => `
-        <button class="wizard-option ${answers[question.id] === opt.value ? 'selected' : ''}" 
-                data-value="${opt.value}">
-          ${opt.label}
-        </button>
-      `).join('')}
+      ${question.options.map(opt => {
+        const isSelected = question.multiSelect 
+          ? currentAnswers.includes(opt.value)
+          : currentAnswers === opt.value;
+        return `
+          <button class="wizard-option ${isSelected ? 'selected' : ''}" 
+                  data-value="${opt.value}">
+            ${opt.label}
+          </button>
+        `;
+      }).join('')}
     </div>
     <div class="wizard-nav">
       ${currentStep > 0 ? '<button class="wizard-btn back">← Back</button>' : ''}
-      <button class="wizard-btn next" ${!answers[question.id] ? 'disabled' : ''}>
-        ${currentStep === wizardQuestions.length - 1 ? 'Find Stocks 🎯' : 'Next →'}
+      <button class="wizard-btn next" ${!hasAnswer(question) ? 'disabled' : ''}>
+        ${currentStep === applicableQuestions.length - 1 ? 'Find Stocks 🎯' : 'Next →'}
       </button>
     </div>
   `;
@@ -176,7 +306,20 @@ function renderWizard() {
   // Option click handlers
   wizardContent.querySelectorAll('.wizard-option').forEach(opt => {
     opt.addEventListener('click', () => {
-      answers[question.id] = opt.dataset.value;
+      const value = opt.dataset.value;
+      
+      if (question.multiSelect) {
+        if (!answers[question.id]) answers[question.id] = [];
+        const idx = answers[question.id].indexOf(value);
+        if (idx > -1) {
+          answers[question.id].splice(idx, 1);
+        } else {
+          answers[question.id].push(value);
+        }
+      } else {
+        answers[question.id] = value;
+      }
+      
       renderWizard();
     });
   });
@@ -193,7 +336,8 @@ function renderWizard() {
   // Next button
   const nextBtn = wizardContent.querySelector('.next');
   nextBtn.addEventListener('click', () => {
-    if (currentStep < wizardQuestions.length - 1) {
+    const applicableQuestions = getApplicableQuestions();
+    if (currentStep < applicableQuestions.length - 1) {
       currentStep++;
       renderWizard();
     } else {
@@ -202,55 +346,82 @@ function renderWizard() {
   });
 }
 
+function hasAnswer(question) {
+  const answer = answers[question.id];
+  if (question.multiSelect) {
+    return answer && answer.length > 0;
+  }
+  return answer !== null && answer !== undefined;
+}
+
 // Find matching stocks
 function findStocks() {
   progressBar.style.width = '100%';
   
   // Collect all selected tags
   const selectedTags = [];
-  let selectedSector = null;
-  let selectedCap = null;
+  let selectedSectors = [];
+  let selectedCaps = [];
+  let selectedTypes = [];
   
-  wizardQuestions.forEach(q => {
+  const applicableQuestions = getApplicableQuestions();
+  
+  applicableQuestions.forEach(q => {
     const answer = answers[q.id];
-    const option = q.options.find(o => o.value === answer);
-    if (option) {
-      selectedTags.push(...option.tags);
-      if (q.id === 'sector' && answer !== 'any') selectedSector = answer;
-      if (q.id === 'size' && answer !== 'any') selectedCap = answer;
-    }
+    if (!answer) return;
+    
+    const answerArray = Array.isArray(answer) ? answer : [answer];
+    
+    answerArray.forEach(ans => {
+      const option = q.options.find(o => o.value === ans);
+      if (option && option.tags) {
+        selectedTags.push(...option.tags);
+      }
+      
+      if (q.id === 'sector' && ans !== 'any') selectedSectors.push(ans);
+      if (q.id === 'size' && ans !== 'any') selectedCaps.push(ans);
+      if (q.id === 'type') selectedTypes.push(ans);
+    });
   });
   
   // Score each stock
   const scored = stockDatabase.map(stock => {
     let score = 0;
     
+    // Type matching
+    if (selectedTypes.length > 0) {
+      if (selectedTypes.includes(stock.type)) score += 25;
+      if (selectedTypes.includes('dividend') && stock.tags.includes('dividend')) score += 20;
+      if (selectedTypes.includes('growth') && stock.tags.includes('growth')) score += 20;
+      if (selectedTypes.includes('etf') && stock.type === 'etf') score += 25;
+    }
+    
     // Tag matching
     selectedTags.forEach(tag => {
-      if (stock.tags.includes(tag)) score += 10;
+      if (stock.tags.includes(tag)) score += 8;
     });
     
     // Sector matching
-    if (selectedSector && stock.sector === selectedSector) score += 20;
+    if (selectedSectors.length > 0 && selectedSectors.includes(stock.sector)) score += 15;
     
     // Cap matching
-    if (selectedCap && stock.cap === selectedCap) score += 15;
+    if (selectedCaps.length > 0 && selectedCaps.includes(stock.cap)) score += 12;
     
     return { ...stock, score };
   });
   
-  // Sort by score and take top 5
+  // Sort by score and take top results
   const topStocks = scored
-    .filter(s => s.score > 0)
+    .filter(s => s.score > 15)
     .sort((a, b) => b.score - a.score)
-    .slice(0, 5);
+    .slice(0, 8);
   
   // Show results
   wizardContent.innerHTML = `
     <div style="text-align: center; padding: 20px;">
       <div style="font-size: 48px; margin-bottom: 16px;">🎯</div>
       <h3 style="margin-bottom: 8px;">Analysis Complete!</h3>
-      <p style="color: var(--text-secondary);">Found ${topStocks.length} matching stocks</p>
+      <p style="color: var(--text-secondary);">Found ${topStocks.length} matching investments</p>
     </div>
     <button class="wizard-btn next" onclick="resetWizard()" style="margin-top: 20px;">
       Start Over 🔄
@@ -275,7 +446,7 @@ function renderStockList(stocks, container) {
     <div class="stock-card" data-ticker="${stock.ticker}">
       <div class="stock-logo">${stock.ticker.substring(0, 2)}</div>
       <div class="stock-info">
-        <div class="stock-ticker">${stock.ticker}</div>
+        <div class="stock-ticker">${stock.ticker} ${stock.type === 'etf' ? '<span style="font-size: 10px; background: var(--accent); color: var(--bg-primary); padding: 2px 6px; border-radius: 4px; margin-left: 4px;">ETF</span>' : ''}</div>
         <div class="stock-name">${stock.name}</div>
       </div>
       <div class="stock-price">
@@ -311,10 +482,11 @@ function renderStockList(stocks, container) {
   });
 }
 
-// Fetch stock quote (using Yahoo Finance API via cors proxy)
+// Fetch stock quote
 async function fetchQuote(ticker) {
   try {
-    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=1d`;
+    const cleanTicker = ticker.replace('.', '-');
+    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${cleanTicker}?interval=1d&range=1d`;
     const res = await fetch(url);
     const data = await res.json();
     
@@ -362,7 +534,7 @@ function renderWatchlist() {
   emptyWatchlist.style.display = 'none';
   const stocks = watchlist.map(ticker => {
     const found = stockDatabase.find(s => s.ticker === ticker);
-    return found || { ticker, name: ticker, sector: '', cap: '', tags: [] };
+    return found || { ticker, name: ticker, sector: '', cap: '', type: 'stock', tags: [] };
   });
   
   renderStockList(stocks, watchlistEl);
@@ -388,12 +560,13 @@ function openModal(ticker) {
   
   const stock = stockDatabase.find(s => s.ticker === ticker);
   const name = stock?.name || ticker;
+  const type = stock?.type || 'stock';
   
   modalHeader.innerHTML = `
     <div style="display: flex; align-items: center; gap: 12px;">
       <div class="stock-logo">${ticker.substring(0, 2)}</div>
       <div>
-        <div class="stock-ticker">${ticker}</div>
+        <div class="stock-ticker">${ticker} ${type === 'etf' ? '<span style="font-size: 10px; background: var(--accent); color: var(--bg-primary); padding: 2px 6px; border-radius: 4px; margin-left: 4px;">ETF</span>' : ''}</div>
         <div class="stock-name">${name}</div>
       </div>
     </div>
@@ -423,12 +596,13 @@ modalTabs.forEach(tab => {
 
 // Chart
 function showChart(ticker) {
+  const cleanTicker = ticker.replace('.', '-');
   modalBody.innerHTML = `<div class="chart-container" id="chart"></div>`;
   
   new TradingView.widget({
     "width": "100%",
     "height": 300,
-    "symbol": ticker,
+    "symbol": cleanTicker,
     "interval": "D",
     "timezone": "America/Chicago",
     "theme": "dark",
@@ -449,7 +623,6 @@ async function showNews(ticker) {
   modalBody.innerHTML = '<p style="text-align:center; padding: 40px;">Loading news...</p>';
   
   try {
-    // Using Finnhub for news (free tier)
     const url = `https://finnhub.io/api/v1/company-news?symbol=${ticker}&from=${getDateDaysAgo(7)}&to=${getToday()}&token=demo`;
     const res = await fetch(url);
     const news = await res.json();
@@ -485,19 +658,28 @@ async function showNews(ticker) {
 function showAnalysis(ticker) {
   const stock = stockDatabase.find(s => s.ticker === ticker);
   const tags = stock?.tags || [];
+  const type = stock?.type || 'stock';
   
-  // Generate pseudo-AI analysis based on tags
   let sentiment = 50;
   let analysis = [];
   
-  if (tags.includes('growth')) { sentiment += 15; analysis.push('Strong growth potential'); }
+  if (type === 'etf') {
+    sentiment += 10;
+    analysis.push('Diversified ETF - Lower individual stock risk');
+  }
+  if (tags.includes('growth')) { sentiment += 12; analysis.push('Strong growth potential'); }
   if (tags.includes('dividend')) { sentiment += 10; analysis.push('Reliable dividend payer'); }
+  if (tags.includes('aristocrat')) { sentiment += 15; analysis.push('Dividend Aristocrat - 25+ years of increases'); }
   if (tags.includes('bluechip')) { sentiment += 10; analysis.push('Blue chip stability'); }
   if (tags.includes('momentum')) { sentiment += 5; analysis.push('Positive momentum'); }
-  if (tags.includes('value')) { sentiment += 10; analysis.push('Potential value play'); }
-  if (tags.includes('aggressive')) { sentiment -= 10; analysis.push('Higher volatility'); }
+  if (tags.includes('value')) { sentiment += 8; analysis.push('Potential value play'); }
+  if (tags.includes('high-yield')) { sentiment += 5; analysis.push('High dividend yield'); }
+  if (tags.includes('aggressive')) { sentiment -= 10; analysis.push('⚠️ Higher volatility'); }
+  if (tags.includes('stable')) { sentiment += 8; analysis.push('Historically stable'); }
   
-  const sentimentLabel = sentiment >= 70 ? 'Bullish' : sentiment >= 50 ? 'Neutral' : 'Bearish';
+  sentiment = Math.min(95, Math.max(20, sentiment));
+  
+  const sentimentLabel = sentiment >= 70 ? 'Bullish' : sentiment >= 50 ? 'Neutral' : 'Cautious';
   const sentimentClass = sentiment >= 60 ? 'bullish' : sentiment < 40 ? 'bearish' : 'bullish';
   
   modalBody.innerHTML = `
@@ -518,7 +700,7 @@ function showAnalysis(ticker) {
       <div class="ai-title">🤖 Key Insights</div>
       <div class="ai-content">
         <ul style="padding-left: 20px; line-height: 1.8;">
-          ${analysis.map(a => `<li>${a}</li>`).join('')}
+          ${analysis.length > 0 ? analysis.map(a => `<li>${a}</li>`).join('') : '<li>No specific insights available</li>'}
         </ul>
       </div>
     </div>
@@ -526,7 +708,7 @@ function showAnalysis(ticker) {
     <div class="ai-section">
       <div class="ai-title">⚠️ Disclaimer</div>
       <div class="ai-content" style="font-size: 12px; color: var(--text-secondary);">
-        This analysis is for informational purposes only. Not financial advice. Always do your own research.
+        This analysis is for informational purposes only. Not financial advice. Always do your own research before investing.
       </div>
     </div>
   `;
