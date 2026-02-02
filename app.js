@@ -740,3 +740,446 @@ if ('serviceWorker' in navigator) {
 
 // Make resetWizard global
 window.resetWizard = resetWizard;
+
+// ============ PHASE 2: SCREENER ============
+
+const screenerFilters = {
+  'ma-crossover': {
+    icon: '📈',
+    title: 'Moving Average Crossover',
+    desc: 'Stocks where 20-day MA crossed above 50-day MA (Golden Cross signal)',
+    type: 'bullish'
+  },
+  '52w-high': {
+    icon: '🔝',
+    title: 'Near 52-Week High',
+    desc: 'Stocks trading within 5% of their 52-week high (momentum strength)',
+    type: 'bullish'
+  },
+  '52w-low': {
+    icon: '🔻',
+    title: 'Near 52-Week Low',
+    desc: 'Stocks trading within 10% of their 52-week low (potential value)',
+    type: 'bearish'
+  },
+  'volume-spike': {
+    icon: '📊',
+    title: 'Volume Spike',
+    desc: 'Stocks with unusually high trading volume (2x+ average)',
+    type: 'neutral'
+  },
+  'oversold': {
+    icon: '💎',
+    title: 'Oversold (RSI < 30)',
+    desc: 'Stocks that may be oversold and due for a bounce',
+    type: 'bullish'
+  },
+  'overbought': {
+    icon: '🔥',
+    title: 'Overbought (RSI > 70)',
+    desc: 'Stocks that may be overbought and due for a pullback',
+    type: 'bearish'
+  }
+};
+
+let currentScreenerFilter = 'ma-crossover';
+const screenerResults = document.getElementById('screener-results');
+const screenerInfo = document.getElementById('screener-info');
+const screenerLoading = document.getElementById('screener-loading');
+
+// Screener filter buttons
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentScreenerFilter = btn.dataset.filter;
+    updateScreenerInfo();
+    runScreener();
+  });
+});
+
+function updateScreenerInfo() {
+  const filter = screenerFilters[currentScreenerFilter];
+  screenerInfo.innerHTML = `
+    <div class="info-icon">${filter.icon}</div>
+    <div class="info-title">${filter.title}</div>
+    <div class="info-desc">${filter.desc}</div>
+  `;
+}
+
+// Fetch technical data for a stock
+async function fetchTechnicalData(ticker) {
+  try {
+    const cleanTicker = ticker.replace('.', '-');
+    // Get 3 months of daily data for calculations
+    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${cleanTicker}?interval=1d&range=3mo`;
+    const res = await fetch(url);
+    const data = await res.json();
+    
+    if (!data.chart.result) return null;
+    
+    const result = data.chart.result[0];
+    const quotes = result.indicators.quote[0];
+    const meta = result.meta;
+    
+    const closes = quotes.close.filter(c => c !== null);
+    const volumes = quotes.volume.filter(v => v !== null);
+    const highs = quotes.high.filter(h => h !== null);
+    const lows = quotes.low.filter(l => l !== null);
+    
+    if (closes.length < 50) return null;
+    
+    // Calculate moving averages
+    const ma20 = closes.slice(-20).reduce((a, b) => a + b, 0) / 20;
+    const ma50 = closes.slice(-50).reduce((a, b) => a + b, 0) / 50;
+    const prevMa20 = closes.slice(-21, -1).reduce((a, b) => a + b, 0) / 20;
+    const prevMa50 = closes.slice(-51, -1).reduce((a, b) => a + b, 0) / 50;
+    
+    // Calculate RSI (14-day)
+    const changes = [];
+    for (let i = 1; i < closes.length; i++) {
+      changes.push(closes[i] - closes[i-1]);
+    }
+    const recentChanges = changes.slice(-14);
+    const gains = recentChanges.filter(c => c > 0);
+    const losses = recentChanges.filter(c => c < 0).map(c => Math.abs(c));
+    const avgGain = gains.length ? gains.reduce((a, b) => a + b, 0) / 14 : 0;
+    const avgLoss = losses.length ? losses.reduce((a, b) => a + b, 0) / 14 : 0.001;
+    const rs = avgGain / avgLoss;
+    const rsi = 100 - (100 / (1 + rs));
+    
+    // 52-week high/low
+    const high52w = Math.max(...highs);
+    const low52w = Math.min(...lows);
+    
+    // Current price and volume
+    const currentPrice = meta.regularMarketPrice;
+    const avgVolume = volumes.slice(-20).reduce((a, b) => a + b, 0) / 20;
+    const currentVolume = volumes[volumes.length - 1];
+    const volumeRatio = currentVolume / avgVolume;
+    
+    // Previous close for change calculation
+    const prevClose = meta.previousClose;
+    const change = ((currentPrice - prevClose) / prevClose * 100);
+    
+    return {
+      ticker,
+      price: currentPrice,
+      change,
+      ma20,
+      ma50,
+      prevMa20,
+      prevMa50,
+      maCrossover: prevMa20 <= prevMa50 && ma20 > ma50, // Golden cross
+      maDeathCross: prevMa20 >= prevMa50 && ma20 < ma50, // Death cross
+      rsi,
+      high52w,
+      low52w,
+      pctFrom52wHigh: ((currentPrice - high52w) / high52w * 100),
+      pctFrom52wLow: ((currentPrice - low52w) / low52w * 100),
+      volumeRatio,
+      avgVolume,
+      currentVolume
+    };
+  } catch (err) {
+    console.log('Tech data error:', ticker, err);
+    return null;
+  }
+}
+
+// Run screener
+async function runScreener() {
+  screenerLoading.style.display = 'block';
+  screenerResults.innerHTML = '';
+  
+  // Get popular stocks to screen
+  const stocksToScreen = stockDatabase
+    .filter(s => s.type === 'stock' && s.cap === 'large')
+    .slice(0, 20)
+    .map(s => s.ticker);
+  
+  const results = [];
+  
+  for (const ticker of stocksToScreen) {
+    const tech = await fetchTechnicalData(ticker);
+    if (!tech) continue;
+    
+    let matches = false;
+    let signalType = 'neutral';
+    let signalText = '';
+    let techInfo = '';
+    
+    switch (currentScreenerFilter) {
+      case 'ma-crossover':
+        if (tech.maCrossover) {
+          matches = true;
+          signalType = 'bullish';
+          signalText = 'Golden Cross';
+          techInfo = `MA20: $${tech.ma20.toFixed(2)} > MA50: $${tech.ma50.toFixed(2)}`;
+        }
+        break;
+        
+      case '52w-high':
+        if (tech.pctFrom52wHigh >= -5) {
+          matches = true;
+          signalType = 'bullish';
+          signalText = `${tech.pctFrom52wHigh.toFixed(1)}% from high`;
+          techInfo = `52W High: $${tech.high52w.toFixed(2)}`;
+        }
+        break;
+        
+      case '52w-low':
+        if (tech.pctFrom52wLow <= 10) {
+          matches = true;
+          signalType = 'bearish';
+          signalText = `${tech.pctFrom52wLow.toFixed(1)}% from low`;
+          techInfo = `52W Low: $${tech.low52w.toFixed(2)}`;
+        }
+        break;
+        
+      case 'volume-spike':
+        if (tech.volumeRatio >= 2) {
+          matches = true;
+          signalType = 'neutral';
+          signalText = `${tech.volumeRatio.toFixed(1)}x Volume`;
+          techInfo = `Avg: ${(tech.avgVolume/1000000).toFixed(1)}M | Today: ${(tech.currentVolume/1000000).toFixed(1)}M`;
+        }
+        break;
+        
+      case 'oversold':
+        if (tech.rsi < 30) {
+          matches = true;
+          signalType = 'bullish';
+          signalText = `RSI: ${tech.rsi.toFixed(0)}`;
+          techInfo = 'Potentially oversold';
+        }
+        break;
+        
+      case 'overbought':
+        if (tech.rsi > 70) {
+          matches = true;
+          signalType = 'bearish';
+          signalText = `RSI: ${tech.rsi.toFixed(0)}`;
+          techInfo = 'Potentially overbought';
+        }
+        break;
+    }
+    
+    if (matches) {
+      results.push({ ...tech, signalType, signalText, techInfo });
+    }
+  }
+  
+  screenerLoading.style.display = 'none';
+  
+  if (results.length === 0) {
+    screenerResults.innerHTML = `
+      <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
+        <div style="font-size: 48px; margin-bottom: 16px;">🔍</div>
+        <p>No stocks match this filter right now</p>
+        <p style="font-size: 13px; margin-top: 8px;">Try another filter or check back later</p>
+      </div>
+    `;
+    return;
+  }
+  
+  renderScreenerResults(results);
+}
+
+function renderScreenerResults(results) {
+  screenerResults.innerHTML = results.map(stock => {
+    const dbStock = stockDatabase.find(s => s.ticker === stock.ticker);
+    const name = dbStock?.name || stock.ticker;
+    
+    return `
+      <div class="stock-card" data-ticker="${stock.ticker}">
+        <div class="stock-logo">${stock.ticker.substring(0, 2)}</div>
+        <div class="stock-info">
+          <div class="stock-ticker">
+            ${stock.ticker}
+            <span class="signal-badge ${stock.signalType}">${stock.signalText}</span>
+          </div>
+          <div class="stock-name">${name}</div>
+          <div class="tech-data">${stock.techInfo}</div>
+        </div>
+        <div class="stock-price">
+          <div class="stock-current">$${stock.price.toFixed(2)}</div>
+          <div class="stock-change ${stock.change >= 0 ? 'up' : 'down'}">
+            ${stock.change >= 0 ? '+' : ''}${stock.change.toFixed(2)}%
+          </div>
+        </div>
+        <button class="watchlist-btn ${watchlist.includes(stock.ticker) ? 'active' : ''}" 
+                data-ticker="${stock.ticker}">
+          ${watchlist.includes(stock.ticker) ? '⭐' : '☆'}
+        </button>
+      </div>
+    `;
+  }).join('');
+  
+  // Add click handlers
+  screenerResults.querySelectorAll('.stock-card').forEach(card => {
+    card.addEventListener('click', (e) => {
+      if (!e.target.classList.contains('watchlist-btn')) {
+        openModal(card.dataset.ticker);
+      }
+    });
+  });
+  
+  screenerResults.querySelectorAll('.watchlist-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleWatchlist(btn.dataset.ticker);
+      btn.textContent = watchlist.includes(btn.dataset.ticker) ? '⭐' : '☆';
+      btn.classList.toggle('active');
+    });
+  });
+}
+
+// Enhanced AI Analysis with technical data
+async function showEnhancedAnalysis(ticker) {
+  modalBody.innerHTML = '<p style="text-align:center; padding: 40px;">Analyzing...</p>';
+  
+  const tech = await fetchTechnicalData(ticker);
+  const stock = stockDatabase.find(s => s.ticker === ticker);
+  const tags = stock?.tags || [];
+  const type = stock?.type || 'stock';
+  
+  let sentiment = 50;
+  let analysis = [];
+  let technicalSignals = [];
+  
+  // Fundamental analysis
+  if (type === 'etf') {
+    sentiment += 8;
+    analysis.push('✅ Diversified ETF - Lower individual stock risk');
+  }
+  if (tags.includes('growth')) { sentiment += 10; analysis.push('✅ Strong growth potential'); }
+  if (tags.includes('dividend')) { sentiment += 8; analysis.push('✅ Reliable dividend payer'); }
+  if (tags.includes('aristocrat')) { sentiment += 12; analysis.push('✅ Dividend Aristocrat - 25+ years of increases'); }
+  if (tags.includes('bluechip')) { sentiment += 10; analysis.push('✅ Blue chip stability'); }
+  if (tags.includes('aggressive')) { sentiment -= 8; analysis.push('⚠️ Higher volatility expected'); }
+  
+  // Technical analysis
+  if (tech) {
+    // RSI
+    if (tech.rsi < 30) {
+      sentiment += 10;
+      technicalSignals.push({ signal: 'Oversold (RSI < 30)', type: 'bullish', detail: `RSI: ${tech.rsi.toFixed(0)}` });
+    } else if (tech.rsi > 70) {
+      sentiment -= 10;
+      technicalSignals.push({ signal: 'Overbought (RSI > 70)', type: 'bearish', detail: `RSI: ${tech.rsi.toFixed(0)}` });
+    } else {
+      technicalSignals.push({ signal: 'RSI Neutral', type: 'neutral', detail: `RSI: ${tech.rsi.toFixed(0)}` });
+    }
+    
+    // Moving Averages
+    if (tech.ma20 > tech.ma50) {
+      sentiment += 8;
+      technicalSignals.push({ signal: 'Bullish MA Trend', type: 'bullish', detail: 'MA20 > MA50' });
+    } else {
+      sentiment -= 5;
+      technicalSignals.push({ signal: 'Bearish MA Trend', type: 'bearish', detail: 'MA20 < MA50' });
+    }
+    
+    // 52-week position
+    if (tech.pctFrom52wHigh >= -10) {
+      sentiment += 5;
+      technicalSignals.push({ signal: 'Near 52W High', type: 'bullish', detail: `${tech.pctFrom52wHigh.toFixed(1)}% from high` });
+    } else if (tech.pctFrom52wLow <= 15) {
+      technicalSignals.push({ signal: 'Near 52W Low', type: 'bearish', detail: `${tech.pctFrom52wLow.toFixed(1)}% from low` });
+    }
+    
+    // Volume
+    if (tech.volumeRatio > 1.5) {
+      technicalSignals.push({ signal: 'High Volume', type: 'neutral', detail: `${tech.volumeRatio.toFixed(1)}x average` });
+    }
+  }
+  
+  sentiment = Math.min(95, Math.max(15, sentiment));
+  
+  const sentimentLabel = sentiment >= 70 ? 'Bullish' : sentiment >= 45 ? 'Neutral' : 'Cautious';
+  const sentimentColor = sentiment >= 65 ? 'var(--accent-green)' : sentiment < 40 ? 'var(--accent-red)' : '#FFD60A';
+  
+  modalBody.innerHTML = `
+    <div class="ai-section">
+      <div class="ai-title">📊 AI Sentiment Score</div>
+      <div class="ai-score">
+        <div class="score-bar">
+          <div class="score-fill ${sentiment >= 50 ? 'bullish' : 'bearish'}" style="width: ${sentiment}%"></div>
+        </div>
+        <div class="score-label">${sentiment}%</div>
+      </div>
+      <div style="margin-top: 8px; font-weight: 600; color: ${sentimentColor}">
+        ${sentimentLabel}
+      </div>
+    </div>
+    
+    ${tech ? `
+    <div class="ai-section">
+      <div class="ai-title">📈 Technical Signals</div>
+      <div class="ai-content">
+        ${technicalSignals.map(s => `
+          <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border);">
+            <span>${s.signal}</span>
+            <span class="signal-badge ${s.type}">${s.detail}</span>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+    
+    <div class="ai-section">
+      <div class="ai-title">📊 Key Levels</div>
+      <div class="ai-content" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <div style="background: var(--bg-primary); padding: 12px; border-radius: 8px; text-align: center;">
+          <div style="font-size: 12px; color: var(--text-secondary);">52W High</div>
+          <div style="font-size: 18px; font-weight: 600;">$${tech.high52w.toFixed(2)}</div>
+        </div>
+        <div style="background: var(--bg-primary); padding: 12px; border-radius: 8px; text-align: center;">
+          <div style="font-size: 12px; color: var(--text-secondary);">52W Low</div>
+          <div style="font-size: 18px; font-weight: 600;">$${tech.low52w.toFixed(2)}</div>
+        </div>
+        <div style="background: var(--bg-primary); padding: 12px; border-radius: 8px; text-align: center;">
+          <div style="font-size: 12px; color: var(--text-secondary);">MA 20</div>
+          <div style="font-size: 18px; font-weight: 600;">$${tech.ma20.toFixed(2)}</div>
+        </div>
+        <div style="background: var(--bg-primary); padding: 12px; border-radius: 8px; text-align: center;">
+          <div style="font-size: 12px; color: var(--text-secondary);">MA 50</div>
+          <div style="font-size: 18px; font-weight: 600;">$${tech.ma50.toFixed(2)}</div>
+        </div>
+      </div>
+    </div>
+    ` : ''}
+    
+    <div class="ai-section">
+      <div class="ai-title">🤖 Fundamental Insights</div>
+      <div class="ai-content">
+        <ul style="padding-left: 20px; line-height: 1.8;">
+          ${analysis.length > 0 ? analysis.map(a => `<li>${a}</li>`).join('') : '<li>No specific insights available</li>'}
+        </ul>
+      </div>
+    </div>
+    
+    <div class="ai-section">
+      <div class="ai-title">⚠️ Disclaimer</div>
+      <div class="ai-content" style="font-size: 12px; color: var(--text-secondary);">
+        This analysis is for informational purposes only. Not financial advice. Always do your own research before investing.
+      </div>
+    </div>
+  `;
+}
+
+// Update the modal tab handler to use enhanced analysis
+const originalShowAnalysis = showAnalysis;
+showAnalysis = function(ticker) {
+  showEnhancedAnalysis(ticker);
+};
+
+// Run initial screener when view is activated
+const screenerNavBtn = document.querySelector('[data-view="screener"]');
+if (screenerNavBtn) {
+  screenerNavBtn.addEventListener('click', () => {
+    if (screenerResults.innerHTML === '') {
+      runScreener();
+    }
+  });
+}

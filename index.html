@@ -28,6 +28,7 @@
     <!-- Navigation -->
     <nav class="nav">
       <button class="nav-btn active" data-view="discover">🎯 Discover</button>
+      <button class="nav-btn" data-view="screener">📊 Screener</button>
       <button class="nav-btn" data-view="search">🔍 Search</button>
       <button class="nav-btn" data-view="watchlist">⭐ Watchlist</button>
     </nav>
@@ -49,6 +50,48 @@
           <h2>🎯 Recommended Stocks</h2>
           <div class="stock-list" id="results-list"></div>
         </div>
+      </section>
+
+      <!-- Screener View -->
+      <section id="screener-view" class="view">
+        <div class="screener-header">
+          <h2>📊 Stock Screener</h2>
+          <p class="subtitle">Find stocks with specific signals</p>
+        </div>
+        
+        <div class="screener-filters">
+          <button class="filter-btn active" data-filter="ma-crossover">
+            📈 MA Crossover
+          </button>
+          <button class="filter-btn" data-filter="52w-high">
+            🔝 52W High
+          </button>
+          <button class="filter-btn" data-filter="52w-low">
+            🔻 52W Low
+          </button>
+          <button class="filter-btn" data-filter="volume-spike">
+            📊 Volume Spike
+          </button>
+          <button class="filter-btn" data-filter="oversold">
+            💎 Oversold
+          </button>
+          <button class="filter-btn" data-filter="overbought">
+            🔥 Overbought
+          </button>
+        </div>
+        
+        <div class="screener-info" id="screener-info">
+          <div class="info-icon">📈</div>
+          <div class="info-title">Moving Average Crossover</div>
+          <div class="info-desc">Stocks where short-term MA crossed above long-term MA (Golden Cross)</div>
+        </div>
+        
+        <div class="screener-loading" id="screener-loading" style="display: none;">
+          <div class="loading-spinner"></div>
+          <p>Scanning stocks...</p>
+        </div>
+        
+        <div class="stock-list" id="screener-results"></div>
       </section>
 
       <!-- Search View -->
